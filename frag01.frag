@@ -122,6 +122,25 @@ vec3 snoiseVec3( vec3 x ){
 
 }
 
+// ray march
+vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
+
+float dist_func(vec3 pos, float size)
+{
+    return length(pos) - size;
+}
+
+vec3 getNormal(vec3 pos, float size)
+{
+    float ep = 0.0001;
+    return normalize(vec3(
+            dist_func(pos, size) - dist_func(vec3(pos.x - ep, pos.y, pos.z), size),
+            dist_func(pos, size) - dist_func(vec3(pos.x, pos.y - ep, pos.z), size),
+            dist_func(pos, size) - dist_func(vec3(pos.x, pos.y, pos.z - ep), size)
+        ));
+}
+
+
 void main(){
 
     float col = 0.0;
@@ -135,22 +154,22 @@ void main(){
     //fcol = vec3(col);
 
     // 2
-    //col = abs(1.0 / (uv.y) * tan(time * 0.5) * 0.01);
-    //fcol = vec3(col);
+    col = abs(1.0 / (uv.y) * tan(time * 0.5) * 0.01);
+    fcol = vec3(col);
 
     // 3
-    //col = abs(1.0 / (uv.y) * tan(time * 0.5 * uv.y) * 0.01);
-    //fcol = vec3(col);
-
-    // 4
-    //uv = updateUV1(uv, 2.0);
     col = abs(1.0 / (uv.y) * tan(time * 0.5 * uv.y) * 0.01);
     fcol = vec3(col);
 
+    // 4
+    //uv = updateUV1(uv, 2.0);
+    //col = abs(1.0 / (uv.y) * tan(time * 0.5 * uv.y) * 0.01);
+    //fcol = vec3(col);
+
     // 5
-    //col = sin((20.0 * uv.x) - 1.0);
+    col = sin((20.0 * uv.x) - 1.0);
     //col *= 0.1 * volume;
-    //fcol += vec3(col);
+    fcol += vec3(col);
 
     // 6
     vec2 uv2 = uv;
@@ -165,10 +184,20 @@ void main(){
     fcol += vec3( col*sin(time/2.)*0.2, col*cos(time) , 3.*sin(col + time / 3.0) * 0.75);
 
     // 8
-    float v0 = 6.0;
-    float v1 = 40.0 * snoise(vec3(floor(uv.x * v0)/v0, floor(uv.y * v0)/v0,time*0.8));
-    vec3 vv = snoiseVec3(vec3(floor(uv.x * v1)/v1, floor(uv.y * v1)/v1, time*0.4));
-    fcol += vec3(vv);
+    //uv = rotate(uv, time);
+    //float v0 = 6.0;
+    //float v1 = 40.0 * snoise(vec3(floor(uv.x * v0)/v0, floor(uv.y * v0)/v0,time*0.8));
+    //vec3 vv = snoiseVec3(vec3(floor(uv.x * v1)/v1, floor(uv.y * v1)/v1, time*0.4));
+    //fcol += vec3(vv);
+    //fcol += vec3(vv * volume * 0.1);
+
+    // ray march
+    // 9
+    vec2 pos = 2.0 * (gl_FragCoord.xy / resolution) - 1.0;
+    vec3 cameraPos = vec3(0.0, 0.0, 10.0);
+    vec3 ray = normalize(vec3(pos, 0.0) - cameraPos);
+    vec3 cur = cameraPos;
+
 
 
 
