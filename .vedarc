@@ -1,0 +1,9 @@
+{
+    "IMPORTED": {
+    },
+    "vertexMode": "LINES",
+    "pixelRatio": 2,
+    "audio": true,
+    "midi": true,
+    "camera": true,
+}
