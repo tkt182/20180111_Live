@@ -140,6 +140,47 @@ vec3 getNormal(vec3 pos, float size)
         ));
 }
 
+vec4 qmult(vec4 a, vec4 b) {
+	vec4 r;
+	r.x = a.x * b.x - dot(a.yzw, b.yzw);
+	r.yzw = a.x * b.yzw + b.x * a.yzw + cross(a.yzw, b.yzw);
+	return r;
+}
+
+void julia(inout vec4 z, inout vec4 dz, in vec4 c) {
+	for(int i = 0; i < 10; i++) {
+		dz = 2.0 * qmult(z, dz);
+		z = qmult(z, z) + c;
+
+		if(dot(z, z) > 3.0) {
+			break;
+		}
+	}
+}
+
+vec3 transform(vec3 p) {
+	float t = time * .03;
+	p.xy *= mat2(cos(t), sin(t), -sin(t), cos(t));
+	t = time * .07;
+	p.zx *= mat2(cos(t), sin(t), -sin(t), cos(t));
+	return p;
+}
+
+float dist(in vec3 p, float x, float y) {
+	p = transform(p);
+	vec4 z = vec4(p, 0.0);
+	vec4 dz = vec4(1.0, 0.0, 0.0, 0.0);
+
+	vec2 m = vec2(x, y);
+	vec4 c = vec4(m.x, m.y, 0.0, 0.0);
+
+	julia(z, dz, c);
+
+	float lz = length(z);
+	float d = 0.5 * log(lz) * lz / length(dz) ;
+
+	return d;
+}
 
 void main(){
 
@@ -167,21 +208,21 @@ void main(){
     //fcol = vec3(col);
 
     // 5
-    col = sin((20.0 * uv.x) - 1.0);
+    //col = sin((20.0 * uv.x) - 1.0);
     //col *= 0.1 * volume;
-    fcol += vec3(col);
+    //fcol += vec3(col);
 
     // 6
-    vec2 uv2 = uv;
-    uv2.x += time * 0.1;
-    col = sin((20.0 * uv2.x) - 1.0);
-    col *= 0.05 * volume;
-    fcol += vec3(col);
+    //vec2 uv2 = uv;
+    //uv2.x += time * 0.1;
+    //col = sin((20.0 * uv2.x) - 1.0);
+    //col *= 0.05 * volume;
+    //fcol += vec3(col);
 
     // 7
     // delete horizon line
-    col = abs(1.0 / (uv.y) * tan(time * 0.5 * uv.y) * 0.01);
-    fcol += vec3( col*sin(time/2.)*0.2, col*cos(time) , 3.*sin(col + time / 3.0) * 0.75);
+    //col = abs(1.0 / (uv.y) * tan(time * 0.5 * uv.y) * 0.01);
+    //fcol += vec3( col*sin(time/2.)*0.2, col*cos(time) , 3.*sin(col + time / 3.0) * 0.75);
 
     // 8
     //uv = rotate(uv, time);
@@ -192,15 +233,57 @@ void main(){
     //fcol += vec3(vv * volume * 0.1);
 
     // ray march
-    // 9
-    vec2 pos = 2.0 * (gl_FragCoord.xy / resolution) - 1.0;
+    /*
+    vec2 pos = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
     vec3 cameraPos = vec3(0.0, 0.0, 10.0);
     vec3 ray = normalize(vec3(pos, 0.0) - cameraPos);
     vec3 cur = cameraPos;
+    float size = 0.5;
+    vec3 rcol = vec3(0.0);
 
+    size += sin(time);
+    for (int i = 0; i < 16; i++){
+        float d = dist_func(cur, size);
+        if (d < 0.0001)
+        {
+            vec3 normal = getNormal(cur, size);
+            float diff = dot(normal, lightDir);
+            rcol = vec3(diff);
+            break;
+        }
+        cur += ray * d;
+    }
+    fcol += rcol;
+    */
 
+    // 9
+    vec2 st = (gl_FragCoord.xy * 2.0 - resolution) / resolution.y;
 
+	  vec3 ori = vec3(0.0, 0.0, 2.0);
+	  vec3 tar = vec3(0.0, 0.0, 0.0);
+	  vec3 cz = normalize(tar - ori);
+	  vec3 cx = cross(cz, vec3(0.0, 1.0, 0.0));
+	  vec3 cy = cross(cx, cz);
+	  vec3 dir = normalize(cx * st.x + cy * st.y + cz * 1.0);
 
+	  float t = 0.0;
+	  int steps = 0;
+	  for (int i = 0; i < 48; i++) {
+		  steps = i;
+		  float d = dist( ori + t * dir, 0.0, 0.0);
+      // 10
+      d = dist(ori + t * dir, tan(time), 0.0);
 
+		  if (d < 0.001 || t > 27.0) break;
+		    t += d;
+	  }
+
+	  vec3 c = vec3(0.0);
+	  if (t < 10.0) {
+		  c = vec3(vec3(1.0 - float(steps) / 64.0));
+      c = vec3( c.x*sin(time/2.)*0.2, c.y*cos(time) , 3.*sin(c.z + time / 3.0) * 0.75);
+	  }
+
+    fcol += c;
     gl_FragColor = vec4(fcol, 1.0);
 }
