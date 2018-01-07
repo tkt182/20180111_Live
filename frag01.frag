@@ -1,11 +1,15 @@
 precision mediump float;
 uniform float time;
 uniform sampler2D backbuffer;
+uniform sampler2D camera;
 uniform sampler2D samples;
 uniform sampler2D spectrum;
 uniform float volume;
 
 uniform vec2 resolution;
+
+const float tFrag = 1.0 / 512.0;
+const float nFrag = 1.0 / 64.0;
 
 vec2 rotate(in vec2 p, in float t) {
   return mat2(
@@ -41,7 +45,6 @@ vec4 taylorInvSqrt(vec4 r){
 float snoise(vec3 v){
   const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
   const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
-
 // First corner
   vec3 i  = floor(v + dot(v, C.yyy) );
   vec3 x0 =   v - i + dot(i, C.xxx) ;
@@ -122,6 +125,45 @@ vec3 snoiseVec3( vec3 x ){
 
 }
 
+float random (in vec2 st) {
+    return fract(sin(dot(st.xy,
+                         vec2(12.9898,78.233)))*
+        43758.5453123);
+}
+
+float noise (in vec2 st) {
+    vec2 i = floor(st);
+    vec2 f = fract(st);
+
+    // Four corners in 2D of a tile
+    float a = random(i);
+    float b = random(i + vec2(1.0, 0.0));
+    float c = random(i + vec2(0.0, 1.0));
+    float d = random(i + vec2(1.0, 1.0));
+
+    vec2 u = f * f * (3.0 - 2.0 * f);
+
+    return mix(a, b, u.x) +
+            (c - a)* u.y * (1.0 - u.x) +
+            (d - b) * u.x * u.y;
+}
+
+#define OCTAVES 6
+float fbm (in vec2 st) {
+    // Initial values
+    float value = 0.0;
+    float amplitud = .5;
+    float frequency = 0.;
+    //
+    // Loop of octaves
+    for (int i = 0; i < OCTAVES; i++) {
+        value += amplitud * noise(st);
+        st *= 2.;
+        amplitud *= .5;
+    }
+    return value;
+}
+
 // ray march
 vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
 
@@ -182,6 +224,12 @@ float dist(in vec3 p, float x, float y) {
 	return d;
 }
 
+
+vec4 getTex(sampler2D buf){
+  vec2 texPos = vec2(gl_FragCoord.xy/resolution);
+  return texture2D(buf, texPos);
+}
+
 void main(){
 
     float col = 0.0;
@@ -195,12 +243,12 @@ void main(){
     //fcol = vec3(col);
 
     // 2
-    col = abs(1.0 / (uv.y) * tan(time * 0.5) * 0.01);
-    fcol = vec3(col);
+    //col = abs(1.0 / (uv.y) * tan(time * 0.5) * 0.01);
+    //fcol = vec3(col);
 
     // 3
-    col = abs(1.0 / (uv.y) * tan(time * 0.5 * uv.y) * 0.01);
-    fcol = vec3(col);
+    //col = abs(1.0 / (uv.y) * tan(time * 0.5 * uv.y) * 0.01);
+    //fcol = vec3(col);
 
     // 4
     //uv = updateUV1(uv, 2.0);
@@ -226,6 +274,7 @@ void main(){
 
     // 8
     //uv = rotate(uv, time);
+    //uv = mod(uv, vec2(3.0)) - vec2(1.0);
     //float v0 = 6.0;
     //float v1 = 40.0 * snoise(vec3(floor(uv.x * v0)/v0, floor(uv.y * v0)/v0,time*0.8));
     //vec3 vv = snoiseVec3(vec3(floor(uv.x * v1)/v1, floor(uv.y * v1)/v1, time*0.4));
@@ -233,30 +282,6 @@ void main(){
     //fcol += vec3(vv * volume * 0.1);
 
     // ray march
-    /*
-    vec2 pos = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
-    vec3 cameraPos = vec3(0.0, 0.0, 10.0);
-    vec3 ray = normalize(vec3(pos, 0.0) - cameraPos);
-    vec3 cur = cameraPos;
-    float size = 0.5;
-    vec3 rcol = vec3(0.0);
-
-    size += sin(time);
-    for (int i = 0; i < 16; i++){
-        float d = dist_func(cur, size);
-        if (d < 0.0001)
-        {
-            vec3 normal = getNormal(cur, size);
-            float diff = dot(normal, lightDir);
-            rcol = vec3(diff);
-            break;
-        }
-        cur += ray * d;
-    }
-    fcol += rcol;
-    */
-
-    // 9
     vec2 st = (gl_FragCoord.xy * 2.0 - resolution) / resolution.y;
 
 	  vec3 ori = vec3(0.0, 0.0, 2.0);
@@ -268,22 +293,126 @@ void main(){
 
 	  float t = 0.0;
 	  int steps = 0;
+    // 9
+    /*
 	  for (int i = 0; i < 48; i++) {
 		  steps = i;
-		  float d = dist( ori + t * dir, 0.0, 0.0);
-      // 10
-      d = dist(ori + t * dir, tan(time), 0.0);
-
+      float d = dist( ori + t * dir, 0.0, 0.0);
 		  if (d < 0.001 || t > 27.0) break;
 		    t += d;
-	  }
+      //d = dist(ori + t * dir, tan(time) + 0.2, 1.0);
+      // 11
 
+      //pos = mod(pos, vec3(4.0)) - vec3(1.0);
+      //d = dist(pos, 1.0, 1.0);
+
+	  }
 	  vec3 c = vec3(0.0);
 	  if (t < 10.0) {
 		  c = vec3(vec3(1.0 - float(steps) / 64.0));
-      c = vec3( c.x*sin(time/2.)*0.2, c.y*cos(time) , 3.*sin(c.z + time / 3.0) * 0.75);
-	  }
+      c = vec3( c.x*sin(time/2.)*0.2 + 0.1, c.y*cos(time) + 0.1, 3.*sin(c.z + time / 3.0) * 0.75 + 0.1);
+    }
 
+    // 10
+    float fog = 0.0;
+    for(float i = 1.;i < 3.;i++) {
+  		vec2 q = uv / fbm(uv*i-time*.1);
+  		fog = length(uv-q);
+  		uv += q;
+  	}
+
+    c += vec3( 2./length(uv-fog));
     fcol += c;
+    */
+
+    // 11
+    /*
+	  for (int i = 0; i < 48; i++) {
+		  steps = i;
+      //float d = dist(ori + t * dir, tan(time) + 0.2, 1.0);
+      //float d = dist(ori + t * dir, tan(time) + sin(time) + 1.0, cos(time * 2.0) + 0.5);
+      //float d = dist(ori + t * dir, fract(tan(time) + sin(time)) + 1.0, cos(time * 2.0) + 0.5);
+      float d = dist(ori + t * dir, sin(time) + 1.0, exp(cos(time * 2.0)));
+		  if (d < 0.001 || t > 27.0) break;
+		    t += d;
+
+      //pos = mod(pos, vec3(4.0)) - vec3(1.0);
+      //d = dist(pos, 1.0, 1.0);
+
+	  }
+	  vec3 c = vec3(0.0);
+	  if (t < 10.0) {
+		  c = vec3(vec3(1.0 - float(steps) / 64.0));
+      c = vec3( c.x*sin(time/2.)*0.2 + 0.2, c.y*cos(time) + 0.2, 3.*sin(c.z + time / 3.0) * 0.75 + 0.2);
+    }
+
+    // 12
+    float fog = 0.0;
+    for(float i = 1.;i < 5.;i++) {
+  		vec2 q = uv / fbm(uv*i-time*.1);
+  		fog = length(uv-q);
+  		uv += q;
+  	}
+
+    c += vec3( 3./length(uv-fog));
+    fcol += c;
+    */
+
+    vec3 pos = vec3(0.0);
+    // 13
+	  for (int i = 0; i < 48; i++) {
+		  steps = i;
+      pos = ori + t * dir;
+      //pos = mod(pos, vec3(2.0)) - vec3(0.5);
+      float d = dist(ori + t * dir, sin(time) + 1.0, exp(cos(time * 2.0)));
+      d = dist(pos, sin(time) + 1.0, exp(cos(time * 2.0))) * 0.2;
+		  if (d < 0.001 || t > 27.0) break;
+		    t += d;
+	  }
+	  vec3 c = vec3(0.0);
+	  if (t < 10.0) {
+		  c = vec3(vec3(1.0 - float(steps) / 64.0));
+      c = vec3( c.x*sin(time/2.)*0.2 + 0.2, c.y*cos(time) + 0.2, 3.*sin(c.z + time / 3.0) * 0.75 + 0.2);
+      vec4 camcol = getTex(camera) * 0.5;
+      //c += camcol.xyz;
+    }
+
+    //vec4 backcol = getTex(backbuffer) * 0.9;
+    vec4 backcol = getTex(camera) * 0.1;
+    //c += backcol.xyz;
+    // 12
+    /*
+    float fog = 0.0;
+    for(float i = 1.;i < 6.;i++) {
+  		vec2 q = uv / fbm(uv*i-time*.1);
+  		fog = length(uv-q);
+  		uv += q;
+  	}
+    */
+
+    //c += vec3( 3./length(uv-fog));
+    fcol += c;
+    //fcol += backcol.xyz;
+
+    float v0 = 6.0;
+    float v1 = 40.0 * snoise(vec3(floor(uv.x * v0)/v0, floor(uv.y * v0)/v0,time*0.8));
+    vec3 vv = snoiseVec3(vec3(floor(uv.x * v1)/v1, floor(uv.y * v1)/v1, time*0.4));
+    fcol += vec3(vv);
+    fcol += vec3(vv * volume * 0.1);
+
+    vec4  destColor = vec4(0.0);
+    vec2  fc = vec2(gl_FragCoord.s, gl_FragCoord.t);
+    //vec2 fc = (gl_FragCoord.xy * 2.0 - resolution) / resolution.y;
+    float offsetX = mod(fc.s, 8.0);
+    float offsetY = mod(fc.t, 8.0);
+
+    for(float x = 0.0; x <= 7.0; x += 1.0){
+      for(float y = 0.0; y <= 7.0; y += 1.0){
+        destColor += texture2D(backbuffer, (fc + vec2(x - offsetX, y - offsetY)) * tFrag);
+      }
+    }
+    fcol += destColor.xyz * 0.01;
+
+
     gl_FragColor = vec4(fcol, 1.0);
 }
