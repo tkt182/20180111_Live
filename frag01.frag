@@ -291,31 +291,25 @@ void main(){
 	  int steps = 0;
     // 9
     /*
-	  for (int i = 0; i < 48; i++) {
-		  steps = i;
-      float d = dist( ori + t * dir, 0.0, 0.0);
-		  if (d < 0.001 || t > 27.0) break;
-		    t += d;
-      //d = dist(ori + t * dir, tan(time) + 0.2, 1.0);
-      // 11
-
-      //pos = mod(pos, vec3(4.0)) - vec3(1.0);
-      //d = dist(pos, 1.0, 1.0);
-
-	  }
-	  vec3 c = vec3(0.0);
-	  if (t < 10.0) {
-		  c = vec3(vec3(1.0 - float(steps) / 64.0));
-      c = vec3( c.x*sin(time/2.)*0.2 + 0.1, c.y*cos(time) + 0.1, 3.*sin(c.z + time / 3.0) * 0.75 + 0.1);
+    for (int i = 0; i < 48; i++) {
+        steps = i;
+        float d = dist( ori + t * dir, 0.0, 0.0);
+        if (d < 0.001 || t > 27.0) break;
+        t += d;
+    }
+    vec3 c = vec3(0.0);
+    if (t < 10.0) {
+        c = vec3(vec3(1.0 - float(steps) / 64.0));
+        c = vec3( c.x*sin(time/2.)*0.2 + 0.1, c.y*cos(time) + 0.1, 3.*sin(c.z + time / 3.0) * 0.75 + 0.1);
     }
 
     // 10
     float fog = 0.0;
     for(float i = 1.;i < 3.;i++) {
-  		vec2 q = uv / fbm(uv*i-time*.1);
-  		fog = length(uv-q);
-  		uv += q;
-  	}
+        vec2 q = uv / fbm(uv*i-time*.1);
+        fog = length(uv-q);
+        uv += q;
+    }
 
     c += vec3( 2./length(uv-fog));
     fcol += c;
@@ -323,32 +317,32 @@ void main(){
 
     // 11
     /*
-	  for (int i = 0; i < 48; i++) {
-		  steps = i;
-      //float d = dist(ori + t * dir, tan(time) + 0.2, 1.0);
-      //float d = dist(ori + t * dir, tan(time) + sin(time) + 1.0, cos(time * 2.0) + 0.5);
-      //float d = dist(ori + t * dir, fract(tan(time) + sin(time)) + 1.0, cos(time * 2.0) + 0.5);
-      float d = dist(ori + t * dir, sin(time) + 1.0, exp(cos(time * 2.0)));
-		  if (d < 0.001 || t > 27.0) break;
-		    t += d;
+    for (int i = 0; i < 48; i++) {
+        steps = i;
+        //float d = dist(ori + t * dir, tan(time) + 0.2, 1.0);
+        //float d = dist(ori + t * dir, tan(time) + sin(time) + 1.0, cos(time * 2.0) + 0.5);
+        //float d = dist(ori + t * dir, fract(tan(time) + sin(time)) + 1.0, cos(time * 2.0) + 0.5);
+        float d = dist(ori + t * dir, sin(time) + 1.0, exp(cos(time * 2.0)));
+        if (d < 0.001 || t > 27.0) break;
+        t += d;
 
-      //pos = mod(pos, vec3(4.0)) - vec3(1.0);
-      //d = dist(pos, 1.0, 1.0);
+        //pos = mod(pos, vec3(4.0)) - vec3(1.0);
+        //d = dist(pos, 1.0, 1.0);
 
-	  }
-	  vec3 c = vec3(0.0);
-	  if (t < 10.0) {
-		  c = vec3(vec3(1.0 - float(steps) / 64.0));
-      c = vec3( c.x*sin(time/2.)*0.2 + 0.2, c.y*cos(time) + 0.2, 3.*sin(c.z + time / 3.0) * 0.75 + 0.2);
-    }
+     }
+     vec3 c = vec3(0.0);
+     if (t < 10.0) {
+         c = vec3(vec3(1.0 - float(steps) / 64.0));
+         c = vec3( c.x*sin(time/2.)*0.2 + 0.2, c.y*cos(time) + 0.2, 3.*sin(c.z + time / 3.0) * 0.75 + 0.2);
+     }
 
     // 12
     float fog = 0.0;
     for(float i = 1.;i < 5.;i++) {
-  		vec2 q = uv / fbm(uv*i-time*.1);
-  		fog = length(uv-q);
-  		uv += q;
-  	}
+        vec2 q = uv / fbm(uv*i-time*.1);
+  	fog = length(uv-q);
+  	uv += q;
+    }
 
     c += vec3( 3./length(uv-fog));
     fcol += c;
@@ -356,21 +350,21 @@ void main(){
 
     vec3 pos = vec3(0.0);
     // 13
-	  for (int i = 0; i < 48; i++) {
-		  steps = i;
-      pos = ori + t * dir;
-      //pos = mod(pos, vec3(2.0)) - vec3(0.5);
-      float d = dist(ori + t * dir, sin(time) + 1.0, exp(cos(time * 2.0)));
-      d = dist(pos, sin(time) + 1.0, exp(cos(time * 2.0))) * 0.2;
-		  if (d < 0.001 || t > 27.0) break;
-		    t += d;
-	  }
-	  vec3 c = vec3(0.0);
-	  if (t < 10.0) {
-		  c = vec3(vec3(1.0 - float(steps) / 64.0));
-      c = vec3( c.x*sin(time/2.)*0.2 + 0.2, c.y*cos(time) + 0.2, 3.*sin(c.z + time / 3.0) * 0.75 + 0.2);
-      vec4 camcol = getTex(camera) * 0.5;
-      //c += camcol.xyz;
+    for (int i = 0; i < 48; i++) {
+        steps = i;
+        pos = ori + t * dir;
+        //pos = mod(pos, vec3(2.0)) - vec3(0.5);
+        float d = dist(ori + t * dir, sin(time) + 1.0, exp(cos(time * 2.0)));
+        d = dist(pos, sin(time) + 1.0, exp(cos(time * 2.0))) * 0.2;
+        if (d < 0.001 || t > 27.0) break;
+	t += d;
+    }
+    vec3 c = vec3(0.0);
+    if (t < 10.0) {
+        c = vec3(vec3(1.0 - float(steps) / 64.0));
+        c = vec3( c.x*sin(time/2.)*0.2 + 0.2, c.y*cos(time) + 0.2, 3.*sin(c.z + time / 3.0) * 0.75 + 0.2);
+        vec4 camcol = getTex(camera) * 0.5;
+        //c += camcol.xyz;
     }
 
     //vec4 backcol = getTex(backbuffer) * 0.9;
@@ -380,10 +374,10 @@ void main(){
     /*
     float fog = 0.0;
     for(float i = 1.;i < 6.;i++) {
-  		vec2 q = uv / fbm(uv*i-time*.1);
-  		fog = length(uv-q);
-  		uv += q;
-  	}
+        vec2 q = uv / fbm(uv*i-time*.1);
+	fog = length(uv-q);
+  	uv += q;
+    }
     */
 
     //c += vec3( 3./length(uv-fog));
