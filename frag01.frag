@@ -1,3 +1,4 @@
+/*{ "camera": true , "audio": true}*/
 precision mediump float;
 uniform float time;
 uniform sampler2D backbuffer;
@@ -262,12 +263,12 @@ void main(){
     //col *= 0.05 * volume;
     //fcol += vec3(col);
 
-    // 7
+    // 7(add color)
     // delete horizon line
     //col = abs(1.0 / (uv.y) * tan(time * 0.5 * uv.y) * 0.01);
     //fcol += vec3( col*sin(time/2.)*0.2, col*cos(time) , 3.*sin(col + time / 3.0) * 0.75);
 
-    // 8
+    // 8(rotate)
     //uv = rotate(uv, time);
     //uv = mod(uv, vec2(3.0)) - vec2(1.0);
     //float v0 = 6.0;
