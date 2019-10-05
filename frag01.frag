@@ -250,11 +250,6 @@ void main(){
     //col = abs(1.0 / (uv.y) * tan(time * 0.5 * uv.y) * 0.01);
     //fcol = vec3(col);
 
-    // 4
-    //uv = updateUV1(uv, 2.0);
-    //col = abs(1.0 / (uv.y) * tan(time * 0.5 * uv.y) * 0.01);
-    //fcol = vec3(col);
-
     // 5
     //col = sin((20.0 * uv.x) - 1.0);
     //col *= 0.1 * volume;
